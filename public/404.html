@@ -11,12 +11,19 @@
 </head>
 <body>
   <div id="app" class="narrow" style="text-align:center; padding-top:60px;">
-    <div style="font-size: 72px; line-height:1; margin-bottom: 16px;">🧭</div>
+    <div id="notFoundIcon" style="display:inline-flex; width:88px; height:88px; align-items:center; justify-content:center; border-radius:20px; background:rgba(79,158,255,0.12); color:var(--accent); margin-bottom:16px;"></div>
     <h1>Page not found</h1>
     <p class="lead">The URL you followed doesn't exist here.</p>
     <div class="card">
       <a href="/" class="link-btn" style="font-size:15px;">← Go to the dashboard</a>
     </div>
   </div>
+  <script src="/icons.js"></script>
+  <script>
+    const el = document.getElementById('notFoundIcon');
+    el.innerHTML = Icons.svg('compass', 'icon');
+    el.querySelector('.icon').style.width = '44px';
+    el.querySelector('.icon').style.height = '44px';
+  </script>
 </body>
 </html>

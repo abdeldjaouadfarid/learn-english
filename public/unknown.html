@@ -22,7 +22,7 @@
 
     <div class="no-print">
       <h1>Words to Learn</h1>
-      <p class="lead">Words you marked as unknown. Sorted by importance (for IELTS) and frequency (most common English first).</p>
+      <p class="lead">Words you marked as unknown. Sorted by priority for IELTS — the words most worth learning first.</p>
 
       <div class="card toolbar">
         <div class="toolbar-group">
@@ -37,8 +37,7 @@
           <label style="margin:0;">
             Sort by
             <select id="sortBy">
-              <option value="importance">Importance</option>
-              <option value="frequency">Frequency (most common first)</option>
+              <option value="importance">Priority (best to learn first)</option>
               <option value="level">Level</option>
               <option value="alpha">A → Z</option>
             </select>
@@ -68,8 +67,6 @@
             <th class="col-example">Example</th>
             <th class="col-pos">POS</th>
             <th class="col-level">Level</th>
-            <th class="col-freq">Freq.</th>
-            <th class="col-imp">Imp.</th>
             <th class="col-action no-print"></th>
           </tr>
         </thead>
@@ -88,6 +85,7 @@
     </div>
   </div>
 
+  <script src="/icons.js"></script>
   <script src="/auth-client.js"></script>
   <script>Auth.ensureSession();</script>
   <script src="/unknown.js"></script>

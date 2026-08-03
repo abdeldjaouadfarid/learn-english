@@ -34,6 +34,31 @@ function renderExample(sentence, targetWord) {
   return escapeHtml(sentence);
 }
 
+function speak(text) {
+  if (!text) return;
+  try {
+    // Strip markdown-style ** markers so the utterance sounds natural.
+    const clean = String(text).replace(/\*\*/g, '');
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(clean);
+    utter.lang = 'en-US';
+    utter.rate = 0.95;
+    // Prefer an en-* voice if available
+    const voices = window.speechSynthesis.getVoices();
+    const en = voices.find(v => v.lang && v.lang.toLowerCase().startsWith('en'));
+    if (en) utter.voice = en;
+    window.speechSynthesis.speak(utter);
+  } catch (err) {
+    console.warn('Speech synthesis error:', err);
+  }
+}
+
+// Warm up the voice list — some browsers populate it asynchronously.
+if ('speechSynthesis' in window) {
+  window.speechSynthesis.getVoices();
+  window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+}
+
 async function loadWords({ triggerEnrich = true } = {}) {
   try {
     const res = await Auth.authFetch('/api/vocab/unknown');
@@ -105,15 +130,20 @@ function render() {
 
   rows.forEach((w, i) => {
     const tr = document.createElement('tr');
+    const speakerSvg = window.Icons ? window.Icons.svg('speaker', 'icon') : '🔊';
+    const wordCell = `
+      <span class="word-text">${escapeHtml(w.word)}</span>
+      <button class="speak-btn no-print" data-speak-word="${escapeHtml(w.word)}" title="Play pronunciation" aria-label="Play pronunciation of ${escapeHtml(w.word)}">${speakerSvg}</button>`;
+    const exampleCell = `
+      ${renderExample(w.example_sentence, w.word)}
+      ${w.example_sentence ? `<button class="speak-btn speak-btn-sm no-print" data-speak-sentence="${escapeHtml(w.example_sentence)}" title="Play sentence" aria-label="Play sentence">${speakerSvg}</button>` : ''}`;
     tr.innerHTML = `
       <td class="row-num">${i + 1}</td>
-      <td class="cell-word">${escapeHtml(w.word)}</td>
+      <td class="cell-word">${wordCell}</td>
       <td class="cell-arabic" dir="rtl" lang="ar">${escapeHtml(w.arabic || '—')}</td>
-      <td class="cell-example">${renderExample(w.example_sentence, w.word)}</td>
+      <td class="cell-example">${exampleCell}</td>
       <td class="cell-pos">${escapeHtml(w.pos || '')}</td>
       <td class="cell-level"><span class="level-badge level-${w.cefr_level || ''}">${escapeHtml(w.cefr_level || '')}</span></td>
-      <td class="cell-freq">${w.frequency_rank ?? '—'}</td>
-      <td class="cell-imp">${renderImp(w.importance)}</td>
       <td class="no-print cell-action">
         <button data-id="${w.id}" class="mark-known" title="Mark as known">✓ Save</button>
         <button data-id="${w.id}" class="mark-delete" title="Remove">✕</button>
@@ -124,6 +154,8 @@ function render() {
 
   body.querySelectorAll('.mark-known').forEach(b => b.onclick = () => markKnown(b.dataset.id));
   body.querySelectorAll('.mark-delete').forEach(b => b.onclick = () => removeWord(b.dataset.id));
+  body.querySelectorAll('[data-speak-word]').forEach(b => b.onclick = (e) => { e.stopPropagation(); speak(b.dataset.speakWord); });
+  body.querySelectorAll('[data-speak-sentence]').forEach(b => b.onclick = (e) => { e.stopPropagation(); speak(b.dataset.speakSentence); });
 }
 
 function renderImp(v) {

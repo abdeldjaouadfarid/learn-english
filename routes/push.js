@@ -1,7 +1,7 @@
 import express from 'express';
 import { query } from '../db.js';
 import { requireAuth } from '../middleware/auth.js';
-import { publicKey, pushConfigured, tickAllSubscriptions } from '../services/push.js';
+import { publicKey, pushConfigured, tickAllSubscriptions, pickNextWord } from '../services/push.js';
 
 const router = express.Router();
 
@@ -58,15 +58,9 @@ router.post('/test', requireAuth, async (req, res) => {
       [req.user.id]
     );
     if (!subs.length) return res.status(404).json({ error: 'no_subscription' });
-    const { rows: wordRows } = await query(
-      `SELECT id, word, arabic FROM vocab_words
-       WHERE user_id = $1 AND status = 'unknown' AND arabic IS NOT NULL
-       ORDER BY RANDOM() LIMIT 1`,
-      [req.user.id]
-    );
-    const w = wordRows[0];
+    const w = await pickNextWord(req.user.id, null);
     const payload = {
-      title: w ? 'Practice word' : 'Reminders enabled ✓',
+      title: w ? `Practice word${w.cefr_level ? ' · ' + w.cefr_level : ''}` : 'Reminders enabled ✓',
       body: w ? `${w.word} — ${w.arabic}` : 'Add some unknown words to start receiving them.',
       icon: '/icon.svg', badge: '/icon.svg', url: '/unknown.html', tag: 'test-push',
     };

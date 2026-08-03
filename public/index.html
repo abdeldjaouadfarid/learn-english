@@ -27,21 +27,21 @@
 
     <div class="dashboard">
       <a href="/test.html" class="dash-card">
-        <div class="dash-icon" aria-hidden="true">📝</div>
+        <span class="dash-icon" data-icon="test" aria-hidden="true"></span>
         <h3>Placement test</h3>
         <p>~14 questions. Get your CEFR level, IELTS band, and a personalized study roadmap.</p>
         <span class="dash-cta">Start test →</span>
       </a>
 
       <a href="/vocab.html" class="dash-card">
-        <div class="dash-icon" aria-hidden="true">📚</div>
+        <span class="dash-icon" data-icon="book" aria-hidden="true"></span>
         <h3>Vocabulary check</h3>
         <p>Rate 100 words as known or unknown. AI estimates your vocabulary size and level.</p>
         <span class="dash-cta">Check words →</span>
       </a>
 
       <a href="/unknown.html" class="dash-card">
-        <div class="dash-icon" aria-hidden="true">🎯</div>
+        <span class="dash-icon" data-icon="target" aria-hidden="true"></span>
         <h3>Words to learn</h3>
         <p>Review words you marked unknown, with Arabic translations, example sentences, and a printable study sheet.</p>
         <span class="dash-cta">Open list →</span>
@@ -64,8 +64,14 @@
     </section>
   </div>
 
+  <script src="/icons.js"></script>
   <script src="/auth-client.js"></script>
   <script src="/push-client.js"></script>
+  <script>
+    document.querySelectorAll('[data-icon]').forEach(el => {
+      el.innerHTML = Icons.svg(el.dataset.icon, 'icon icon-xl');
+    });
+  </script>
   <script>
     Auth.ensureSession();
 

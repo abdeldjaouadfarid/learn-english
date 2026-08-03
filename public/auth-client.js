@@ -112,10 +112,10 @@ window.Auth = (() => {
   }
 
   const NAV_ITEMS = [
-    { href: '/',             label: 'Dashboard',        icon: '🏠' },
-    { href: '/test.html',    label: 'Placement test',   icon: '📝' },
-    { href: '/vocab.html',   label: 'Vocabulary check', icon: '📚' },
-    { href: '/unknown.html', label: 'Words to learn',   icon: '🎯' },
+    { href: '/',             label: 'Dashboard',        icon: 'home'   },
+    { href: '/test.html',    label: 'Placement test',   icon: 'test'   },
+    { href: '/vocab.html',   label: 'Vocabulary check', icon: 'book'   },
+    { href: '/unknown.html', label: 'Words to learn',   icon: 'target' },
   ];
 
   function mountSidebar() {
@@ -134,9 +134,10 @@ window.Auth = (() => {
     if (!document.getElementById('sidebar')) {
       const user = getUser();
       const currentPath = window.location.pathname.replace(/\/$/, '') || '/';
+      const iconSvg = (name) => (window.Icons ? window.Icons.svg(name, 'icon') : '');
       const links = NAV_ITEMS.map(it => {
         const active = it.href === currentPath || (it.href === '/' && currentPath === '/');
-        return `<a href="${it.href}" class="side-link${active ? ' active' : ''}"><span class="side-icon" aria-hidden="true">${it.icon}</span>${it.label}</a>`;
+        return `<a href="${it.href}" class="side-link${active ? ' active' : ''}"><span class="side-icon" aria-hidden="true">${iconSvg(it.icon)}</span>${it.label}</a>`;
       }).join('');
 
       const overlay = document.createElement('div');
