@@ -29,9 +29,9 @@ app.use((req, res, next) => {
   next();
 });
 
-app.get("/", (req, res) => {
-  res.send("Hello Render");
-});
+// app.get("/", (req, res) => {
+//   res.send("Hello Render");
+// });
 
 app.use(
   express.static(path.join(__dirname, "public"), {
