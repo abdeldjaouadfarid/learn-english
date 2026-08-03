@@ -47,9 +47,125 @@
         <span class="dash-cta">Open list →</span>
       </a>
     </div>
+
+    <section id="remindersCard" class="card reminders-card" style="margin-top:20px;">
+      <div class="reminders-head">
+        <div>
+          <h3 style="margin:0;">Practice reminders</h3>
+          <p id="reminderStatus" style="margin:4px 0 0;color:var(--muted);font-size:13px;">Loading…</p>
+        </div>
+        <div class="reminders-actions">
+          <button id="enablePushBtn" class="primary hidden">Enable notifications</button>
+          <button id="testPushBtn" class="hidden">Send test</button>
+          <button id="disablePushBtn" class="hidden">Disable</button>
+        </div>
+      </div>
+      <p class="hint" id="reminderHint" style="text-align:left;margin-top:12px;"></p>
+    </section>
   </div>
 
   <script src="/auth-client.js"></script>
-  <script>Auth.ensureSession();</script>
+  <script src="/push-client.js"></script>
+  <script>
+    Auth.ensureSession();
+
+    (async () => {
+      const statusEl = document.getElementById('reminderStatus');
+      const hintEl = document.getElementById('reminderHint');
+      const enableBtn = document.getElementById('enablePushBtn');
+      const testBtn = document.getElementById('testPushBtn');
+      const disableBtn = document.getElementById('disableBtn') || document.getElementById('disablePushBtn');
+
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+        || window.navigator.standalone === true;
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
+      async function refresh() {
+        try {
+          const s = await Push.status();
+          if (!s.supported) {
+            statusEl.textContent = 'Not supported in this browser.';
+            hintEl.textContent = isIOS
+              ? 'On iPhone/iPad, add the app to your Home Screen (Share → Add to Home Screen) and open it from there to receive notifications. Requires iOS 16.4 or newer.'
+              : 'Try Chrome, Edge, Firefox, or a modern mobile browser.';
+            return;
+          }
+          if (isIOS && !isStandalone) {
+            statusEl.textContent = 'Add to Home Screen first.';
+            hintEl.textContent = 'iOS delivers push only to installed PWAs. Tap Share → Add to Home Screen, then open the app from the new icon and come back here.';
+            enableBtn.classList.add('hidden');
+            testBtn.classList.add('hidden');
+            disableBtn.classList.add('hidden');
+            return;
+          }
+          if (s.subscribed) {
+            statusEl.textContent = 'On — you\'ll get a practice word every 30 minutes.';
+            hintEl.textContent = 'Reminders pause automatically if you have no unknown words in your list.';
+            enableBtn.classList.add('hidden');
+            testBtn.classList.remove('hidden');
+            disableBtn.classList.remove('hidden');
+          } else if (s.permission === 'denied') {
+            statusEl.textContent = 'Blocked by browser settings.';
+            hintEl.textContent = 'You previously denied notifications. Turn them back on in your browser\'s site settings, then reload.';
+            enableBtn.classList.add('hidden');
+            testBtn.classList.add('hidden');
+            disableBtn.classList.add('hidden');
+          } else {
+            statusEl.textContent = 'Off.';
+            hintEl.textContent = 'Turn on to get a random unknown word (with its Arabic translation) every 30 minutes.';
+            enableBtn.classList.remove('hidden');
+            testBtn.classList.add('hidden');
+            disableBtn.classList.add('hidden');
+          }
+        } catch (err) {
+          statusEl.textContent = 'Error: ' + err.message;
+        }
+      }
+
+      enableBtn.onclick = async () => {
+        enableBtn.disabled = true;
+        try {
+          await Push.enable();
+          hintEl.style.color = 'var(--success)';
+          hintEl.textContent = 'Enabled. Sending a test notification now…';
+          try { await Push.sendTest(); } catch (e) { console.warn(e); }
+          await refresh();
+        } catch (err) {
+          hintEl.style.color = 'var(--danger)';
+          hintEl.textContent = 'Error: ' + err.message;
+        } finally {
+          enableBtn.disabled = false;
+        }
+      };
+
+      testBtn.onclick = async () => {
+        testBtn.disabled = true;
+        try {
+          await Push.sendTest();
+          hintEl.style.color = 'var(--success)';
+          hintEl.textContent = 'Test notification sent — check your device.';
+        } catch (err) {
+          hintEl.style.color = 'var(--danger)';
+          hintEl.textContent = 'Error: ' + err.message;
+        } finally {
+          testBtn.disabled = false;
+        }
+      };
+
+      disableBtn.onclick = async () => {
+        disableBtn.disabled = true;
+        try {
+          await Push.disable();
+          await refresh();
+        } catch (err) {
+          hintEl.textContent = 'Error: ' + err.message;
+        } finally {
+          disableBtn.disabled = false;
+        }
+      };
+
+      refresh();
+    })();
+  </script>
 </body>
 </html>

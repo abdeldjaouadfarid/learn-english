@@ -6,6 +6,8 @@ import { fileURLToPath } from "url";
 import { pool, query, initDb } from "./db.js";
 import { requireAuth } from "./middleware/auth.js";
 import authRouter from "./routes/auth.js";
+import pushRouter from "./routes/push.js";
+import { tickAllSubscriptions, pushConfigured } from "./services/push.js";
 import {
   generateTest,
   gradeTest,
@@ -36,7 +38,7 @@ app.use((req, res, next) => {
 app.use(
   express.static(path.join(__dirname, "public"), {
     setHeaders(res, filePath) {
-      if (filePath.endsWith(".html")) {
+      if (filePath.endsWith(".html") || filePath.endsWith("sw.js")) {
         res.setHeader("Cache-Control", "no-store, must-revalidate");
       }
     },
@@ -55,6 +57,7 @@ if (!process.env.SMTP_USER) {
 }
 
 app.use("/api/auth", authRouter);
+app.use("/api/push", pushRouter);
 
 // ---------- Placement test ----------
 
@@ -433,6 +436,19 @@ const HOST = process.env.HOST || "0.0.0.0";
       () => { pruneOld().catch((e) => console.error("prune error:", e.message)); },
       60 * 60 * 1000,
     );
+
+    // Internal notification tick.
+    const intervalMin = Number(process.env.NOTIFY_INTERVAL_MIN) || 30;
+    if (pushConfigured() && intervalMin > 0) {
+      console.log(`[info] Notification tick: every ${intervalMin} min`);
+      setInterval(() => {
+        tickAllSubscriptions()
+          .then(r => console.log(`[tick] ${JSON.stringify(r)}`))
+          .catch(e => console.error('tick error:', e.message));
+      }, intervalMin * 60 * 1000);
+    } else {
+      console.log('[info] Notification tick disabled (VAPID not set or interval=0).');
+    }
     app.listen(PORT, HOST, () =>
       console.log(`Server listening on ${HOST}:${PORT}`),
     );
