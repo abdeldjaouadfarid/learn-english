@@ -274,6 +274,67 @@ Both providers implement the same three internal functions: `generateTest`, `gra
 
 ---
 
+## Deploying to Render
+
+The app runs on Render's free web-service tier. Once the Neon Postgres and Gmail App Password are in hand, deploy in three steps.
+
+### 1. Create the service
+- **New → Web Service**, connect this repo.
+- **Runtime**: Node
+- **Build Command**: `npm install`
+- **Start Command**: `npm start`
+- **Health Check Path**: `/healthz`
+
+### 2. Set environment variables (Settings → Environment)
+
+Every one of these must be set — missing values silently break signup or email delivery:
+
+| Key | Required | Value |
+|-----|----------|-------|
+| `DATABASE_URL` | ✅ | Neon connection string (with `?sslmode=require`) |
+| `JWT_SECRET` | ✅ | Long random string (`openssl rand -hex 32`) |
+| `APP_URL` | ✅ | **Your actual Render URL**, e.g. `https://learn-english-oo50.onrender.com`. Without this, verification/reset emails link to `localhost` and no one can register. |
+| `LLM_PROVIDER` | ✅ | `gemini` |
+| `GEMINI_API_KEY` | ✅ | From https://aistudio.google.com/apikey |
+| `GEMINI_MODEL` | ⚪ | e.g. `gemini-flash-latest` |
+| `SMTP_HOST` | ✅ | `smtp.gmail.com` |
+| `SMTP_PORT` | ✅ | `465` |
+| `SMTP_SECURE` | ✅ | `true` |
+| `SMTP_USER` | ✅ | Your Gmail address. **If missing, no emails send** — users can't verify or reset. |
+| `SMTP_PASS` | ✅ | 16-char App Password (not your Google password) |
+| `SMTP_FROM` | ⚪ | `"English Level Test <you@gmail.com>"` |
+| `NODE_VERSION` | ⚪ | `20` (or newer) |
+
+Do **not** set `PORT` — Render sets it automatically.
+
+### 3. First deploy checks
+
+After the deploy finishes, look at the Render **Logs** tab. You should see:
+
+```
+[info] Serving static from /opt/render/project/src/public
+[info] APP_URL = https://learn-english-....onrender.com
+[info] LLM provider: gemini, model: gemini-flash-latest
+[info] Postgres schema ready
+Server listening on 0.0.0.0:10000
+```
+
+If you see `[warn] SMTP_USER not set` → users cannot register (verification emails never leave the server). Set the SMTP vars and redeploy.
+
+If you see `[info] APP_URL not set — email links will use the incoming request host` → this is fine on Render (it will use the correct host from the request) but setting `APP_URL` explicitly is safer.
+
+### Free tier spin-down
+
+Render Free spins down the service after 15 minutes of inactivity. The next request wakes it, which takes ~30–60 seconds. During spin-up users may see a loading page or timeout. This is a Render behavior, not a bug in the app. Upgrade to Starter ($7/mo) to keep it always-on.
+
+### If you still see "Not Found"
+
+- Check **Logs** — the server may have crashed on boot (usually a bad `DATABASE_URL`).
+- Visit `https://YOUR-URL/healthz` — should return `{"ok":true}`. If not, the server isn't up.
+- Visit `https://YOUR-URL/style.css` — should return the CSS. If it 404s, the `public/` folder didn't ship (check that it's committed to git).
+
+---
+
 ## Troubleshooting
 
 **`EADDRINUSE :::3000`** — another server is already on port 3000. Kill it:

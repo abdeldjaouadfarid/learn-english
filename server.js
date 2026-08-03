@@ -382,25 +382,62 @@ app.get("/api/vocab/stats", requireAuth, async (req, res) => {
   res.json(stats);
 });
 
+// ---------- Health check (no DB, no auth) ----------
+app.get("/healthz", (_req, res) => res.status(200).json({ ok: true }));
+
+// ---------- 404 (must come after everything) ----------
+app.use((req, res) => {
+  const wantsJson = req.path.startsWith("/api/") || req.accepts(["json", "html"]) === "json";
+  if (wantsJson) return res.status(404).json({ error: "not_found", path: req.path });
+  res.status(404).sendFile(path.join(__dirname, "public", "404.html"), (err) => {
+    if (err) res.status(404).type("text/plain").send("Not Found");
+  });
+});
+
+// ---------- Global error handler ----------
+app.use((err, req, res, _next) => {
+  console.error("[error]", req.method, req.path, "-", err.stack || err.message);
+  if (res.headersSent) return;
+  const wantsJson = req.path.startsWith("/api/") || req.accepts(["json", "html"]) === "json";
+  if (wantsJson) return res.status(500).json({ error: "server_error", message: err.message });
+  res.status(500).type("text/plain").send("Server error");
+});
+
 // ---------- Boot ----------
 
-const PORT = process.env.PORT || 3000;
+const PORT = Number(process.env.PORT) || 3000;
+const HOST = process.env.HOST || "0.0.0.0";
 
 (async () => {
   try {
+    // Sanity check: make sure the public/ folder exists.
+    const fs = await import("fs");
+    const publicDir = path.join(__dirname, "public");
+    if (!fs.existsSync(publicDir)) {
+      console.warn(`[warn] public/ folder not found at ${publicDir} — static files will 404`);
+    } else {
+      console.log(`[info] Serving static from ${publicDir}`);
+    }
+    if (!process.env.APP_URL) {
+      console.log("[info] APP_URL not set — email links will use the incoming request host.");
+    } else {
+      console.log(`[info] APP_URL = ${process.env.APP_URL}`);
+    }
+    if (!process.env.SMTP_USER) {
+      console.warn("[warn] SMTP_USER not set — verification & reset emails WILL NOT BE SENT (only logged).");
+    }
+
     await initDb();
     const { pruneOld } = await import("./middleware/rateLimit.js");
     setInterval(
-      () => {
-        pruneOld().catch((e) => console.error("prune error:", e.message));
-      },
+      () => { pruneOld().catch((e) => console.error("prune error:", e.message)); },
       60 * 60 * 1000,
     );
-    app.listen(PORT, () =>
-      console.log(`Server running on http://localhost:${PORT}`),
+    app.listen(PORT, HOST, () =>
+      console.log(`Server listening on ${HOST}:${PORT}`),
     );
   } catch (err) {
-    console.error("Failed to initialize DB:", err.message);
+    console.error("Failed to initialize:", err.stack || err.message);
     process.exit(1);
   }
 })();

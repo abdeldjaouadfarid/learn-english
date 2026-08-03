@@ -302,6 +302,162 @@ ul#tips li::before { content: '→'; position: absolute; left: 0; color: var(--a
   margin-left: 2px;
 }
 
+/* ---------- Dashboard ---------- */
+.dashboard-hero { margin-bottom: 24px; }
+
+.dashboard {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+.dash-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 22px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  text-decoration: none;
+  color: var(--text);
+  transition: transform 0.15s, border-color 0.15s, background 0.15s;
+}
+.dash-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+  background: linear-gradient(180deg, var(--panel), rgba(79, 158, 255, 0.05));
+}
+.dash-card h3 { margin: 0; font-size: 18px; color: var(--text); }
+.dash-card p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.5; flex: 1; }
+.dash-icon { font-size: 32px; line-height: 1; }
+.dash-cta {
+  margin-top: 8px;
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* ---------- Burger button ---------- */
+.menu-toggle {
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 36px;
+  height: 32px;
+  padding: 7px 6px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.menu-toggle span {
+  display: block;
+  width: 100%;
+  height: 2px;
+  background: var(--text);
+  border-radius: 1px;
+}
+.menu-toggle:hover { background: var(--panel-2); border-color: var(--accent); }
+
+/* ---------- Sidebar drawer ---------- */
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+  z-index: 99;
+}
+.sidebar-overlay.open { opacity: 1; pointer-events: auto; }
+
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: min(300px, 85vw);
+  background: var(--panel);
+  border-right: 1px solid var(--border);
+  transform: translateX(-100%);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.4);
+}
+.sidebar.open { transform: translateX(0); }
+
+.sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.sidebar-title { font-weight: 600; color: var(--muted); font-size: 13px; text-transform: uppercase; letter-spacing: 1px; }
+.sidebar-close {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 20px;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+.sidebar-close:hover { color: var(--text); background: var(--panel-2); }
+
+.sidebar-user {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.sidebar-user-email {
+  color: var(--text);
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  padding: 12px 8px;
+  flex: 1;
+  overflow-y: auto;
+}
+.side-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  color: var(--text);
+  text-decoration: none;
+  border-radius: 6px;
+  font-size: 15px;
+  transition: background 0.1s;
+}
+.side-link:hover { background: var(--panel-2); }
+.side-link.active {
+  background: rgba(79, 158, 255, 0.15);
+  color: var(--accent);
+  font-weight: 500;
+}
+.side-icon { font-size: 18px; width: 22px; text-align: center; }
+
+.sidebar-logout {
+  margin: 12px;
+  padding: 12px;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--danger);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+}
+.sidebar-logout:hover { background: rgba(248, 81, 73, 0.1); border-color: var(--danger); }
+
 .alt-link {
   text-align: center;
   margin-top: 24px;
@@ -505,8 +661,11 @@ ul#tips li::before { content: '→'; position: absolute; left: 0; color: var(--a
 
   .topbar { padding: 8px 0 16px; margin-bottom: 16px; }
   .brand { font-size: 14px; }
-  .user-badge { font-size: 12px; gap: 6px; }
-  .user-email { max-width: 140px; }
+  .user-badge { display: none; } /* Sidebar drawer covers this on mobile */
+
+  .dash-card { padding: 18px; }
+  .dash-card h3 { font-size: 16px; }
+  .dash-icon { font-size: 26px; }
 
   /* Buttons full-width on very small screens */
   button.primary { width: 100%; padding: 12px 16px; font-size: 15px; }

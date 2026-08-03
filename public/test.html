@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#4f9eff" />
+  <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+  <link rel="apple-touch-icon" href="/icon.svg" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="English Test" />
+  <title>Placement Test</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body data-requires-auth="1">
+  <div id="app">
+    <header class="topbar">
+      <a href="/" class="brand">English Level Test</a>
+      <div id="userBadge" class="user-badge"></div>
+    </header>
+
+    <section id="intro" class="screen">
+      <h1>Placement Test</h1>
+      <p class="lead">Take a short adaptive test. We'll estimate your CEFR level and IELTS band, then build a personalized study roadmap to hit your target.</p>
+
+      <div class="card">
+        <label>
+          Target IELTS band <span class="required">*</span>
+          <input type="number" id="goalBand" min="4" max="9" step="0.5" value="7" required />
+        </label>
+        <label>
+          Target date (optional)
+          <input type="date" id="targetDate" />
+        </label>
+        <button id="startBtn" class="primary">Start test</button>
+        <p id="startStatus" class="status"></p>
+      </div>
+
+      <p class="hint">The test is ~14 questions. Takes 15-25 minutes. Written questions are graded by AI.</p>
+    </section>
+
+    <section id="test" class="screen hidden">
+      <div class="progress-bar"><div id="progressFill"></div></div>
+      <div id="questionContainer"></div>
+      <div class="test-nav">
+        <button id="prevBtn">Back</button>
+        <span id="qIndicator"></span>
+        <button id="nextBtn" class="primary">Next</button>
+      </div>
+    </section>
+
+    <section id="results" class="screen hidden">
+      <h1>Your Results</h1>
+      <div class="result-grid">
+        <div class="stat">
+          <div class="stat-label">CEFR Level</div>
+          <div class="stat-value" id="cefrLevel">—</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Estimated IELTS</div>
+          <div class="stat-value" id="ieltsBand">—</div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Summary</h3>
+        <p id="summary"></p>
+      </div>
+      <div class="card">
+        <h3>Skill breakdown</h3>
+        <div id="skills"></div>
+      </div>
+
+      <div id="roadmapSection" class="hidden">
+        <h2>Your IELTS Roadmap</h2>
+        <div class="card">
+          <div class="roadmap-header">
+            <div><strong id="roadmapWeeks">—</strong> weeks · <strong id="roadmapHours">—</strong> hrs/week</div>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Phases</h3>
+          <div id="phases"></div>
+        </div>
+        <div class="card">
+          <h3>Weekly schedule</h3>
+          <div id="schedule"></div>
+        </div>
+        <div class="card">
+          <h3>Recommended resources</h3>
+          <ul id="resources"></ul>
+        </div>
+        <div class="card">
+          <h3>Test day tips</h3>
+          <ul id="tips"></ul>
+        </div>
+      </div>
+
+      <button id="restartBtn">Take another test</button>
+    </section>
+
+    <div id="loading" class="loading hidden">
+      <div class="spinner"></div>
+      <p id="loadingText">Loading…</p>
+    </div>
+  </div>
+
+  <script src="/auth-client.js"></script>
+  <script>Auth.ensureSession();</script>
+  <script src="/app.js"></script>
+</body>
+</html>

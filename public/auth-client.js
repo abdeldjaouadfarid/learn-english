@@ -111,5 +111,85 @@ window.Auth = (() => {
     };
   }
 
-  return { getToken, getUser, setSession, clearSession, authFetch, ensureSession, redirectIfAuthed, renderUserBadge };
+  const NAV_ITEMS = [
+    { href: '/',             label: 'Dashboard',        icon: '🏠' },
+    { href: '/test.html',    label: 'Placement test',   icon: '📝' },
+    { href: '/vocab.html',   label: 'Vocabulary check', icon: '📚' },
+    { href: '/unknown.html', label: 'Words to learn',   icon: '🎯' },
+  ];
+
+  function mountSidebar() {
+    // Burger button in topbar (once).
+    const topbar = document.querySelector('.topbar');
+    if (topbar && !topbar.querySelector('.menu-toggle')) {
+      const btn = document.createElement('button');
+      btn.className = 'menu-toggle';
+      btn.setAttribute('aria-label', 'Open menu');
+      btn.innerHTML = '<span></span><span></span><span></span>';
+      topbar.insertBefore(btn, topbar.firstChild);
+      btn.addEventListener('click', openSidebar);
+    }
+
+    // Drawer + overlay (once).
+    if (!document.getElementById('sidebar')) {
+      const user = getUser();
+      const currentPath = window.location.pathname.replace(/\/$/, '') || '/';
+      const links = NAV_ITEMS.map(it => {
+        const active = it.href === currentPath || (it.href === '/' && currentPath === '/');
+        return `<a href="${it.href}" class="side-link${active ? ' active' : ''}"><span class="side-icon" aria-hidden="true">${it.icon}</span>${it.label}</a>`;
+      }).join('');
+
+      const overlay = document.createElement('div');
+      overlay.id = 'sidebarOverlay';
+      overlay.className = 'sidebar-overlay';
+      overlay.addEventListener('click', closeSidebar);
+
+      const aside = document.createElement('aside');
+      aside.id = 'sidebar';
+      aside.className = 'sidebar';
+      aside.innerHTML = `
+        <div class="sidebar-header">
+          <span class="sidebar-title">Menu</span>
+          <button class="sidebar-close" aria-label="Close menu">✕</button>
+        </div>
+        ${user ? `<div class="sidebar-user"><div class="sidebar-user-email">${user.email}</div></div>` : ''}
+        <nav class="sidebar-nav">${links}</nav>
+        <button class="sidebar-logout">Log out</button>
+      `;
+
+      document.body.appendChild(overlay);
+      document.body.appendChild(aside);
+
+      aside.querySelector('.sidebar-close').addEventListener('click', closeSidebar);
+      aside.querySelector('.sidebar-logout').addEventListener('click', () => {
+        clearSession();
+        window.location.replace('/login.html');
+      });
+    }
+  }
+
+  function openSidebar() {
+    document.getElementById('sidebar')?.classList.add('open');
+    document.getElementById('sidebarOverlay')?.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeSidebar() {
+    document.getElementById('sidebar')?.classList.remove('open');
+    document.getElementById('sidebarOverlay')?.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeSidebar();
+  });
+
+  // Extend ensureSession to also mount sidebar after user is loaded.
+  const _origEnsure = ensureSession;
+  ensureSession = async function () {
+    const user = await _origEnsure();
+    if (user) mountSidebar();
+    return user;
+  };
+
+  return { getToken, getUser, setSession, clearSession, authFetch, ensureSession, redirectIfAuthed, renderUserBadge, mountSidebar };
 })();

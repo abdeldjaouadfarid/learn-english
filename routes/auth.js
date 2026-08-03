@@ -13,7 +13,17 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const LOCKOUT_MAX_FAILURES = 5;
 const LOCKOUT_WINDOW_SEC = 15 * 60;
 
-const APP_URL = () => process.env.APP_URL || `http://localhost:${process.env.PORT || 3000}`;
+// Prefer explicit env, fall back to the incoming request's host so links always
+// point back to whatever domain the user is actually on.
+const appUrl = (req) => {
+  if (process.env.APP_URL) return process.env.APP_URL.replace(/\/$/, '');
+  if (req) {
+    const proto = req.headers['x-forwarded-proto'] || req.protocol;
+    const host = req.headers['x-forwarded-host'] || req.get('host');
+    if (host) return `${proto}://${host}`;
+  }
+  return `http://localhost:${process.env.PORT || 3000}`;
+};
 
 async function recordLoginAttempt(email, ip, success) {
   await query('INSERT INTO login_attempts (email, ip, success) VALUES ($1, $2, $3)', [email, ip, success]);
@@ -56,7 +66,7 @@ router.post('/signup', async (req, res) => {
       'INSERT INTO email_verifications (token, user_id, expires_at) VALUES ($1, $2, $3)',
       [token, user.id, expires]
     );
-    const verifyUrl = `${APP_URL()}/verify.html?token=${token}`;
+    const verifyUrl = `${appUrl(req)}/verify.html?token=${token}`;
     try {
       await sendVerificationEmail({ to: email, verifyUrl });
     } catch (mailErr) {
@@ -120,7 +130,7 @@ router.post('/resend-verification', async (req, res) => {
         'INSERT INTO email_verifications (token, user_id, expires_at) VALUES ($1, $2, $3)',
         [token, user.id, expires]
       );
-      const verifyUrl = `${APP_URL()}/verify.html?token=${token}`;
+      const verifyUrl = `${appUrl(req)}/verify.html?token=${token}`;
       try {
         await sendVerificationEmail({ to: email, verifyUrl });
       } catch (mailErr) {
@@ -222,7 +232,7 @@ router.post('/forgot-password', async (req, res) => {
         'INSERT INTO password_resets (token, user_id, expires_at) VALUES ($1, $2, $3)',
         [token, user.id, expires]
       );
-      const resetUrl = `${APP_URL()}/reset.html?token=${token}`;
+      const resetUrl = `${appUrl(req)}/reset.html?token=${token}`;
       try {
         await sendPasswordReset({ to: email, resetUrl });
       } catch (mailErr) {
