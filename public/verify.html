@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Verify email</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <div id="app" class="narrow">
+    <h1>Verifying your email…</h1>
+    <div class="card">
+      <p id="msg" class="status" style="color: var(--muted);">One moment…</p>
+      <div id="cta" class="hidden">
+        <a href="/login.html" class="link-btn">Go to log in →</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const token = new URLSearchParams(location.search).get('token');
+    const msg = document.getElementById('msg');
+    const cta = document.getElementById('cta');
+
+    (async () => {
+      if (!token) {
+        msg.style.color = 'var(--danger)';
+        msg.textContent = 'Missing token — open the link from your email.';
+        return;
+      }
+      try {
+        const res = await fetch('/api/auth/verify-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          const map = {
+            invalid_or_expired_token: 'This verification link is invalid or has expired. Sign up again or request a new link.',
+            too_many_requests: 'Too many attempts. Try again later.',
+          };
+          throw new Error(map[data.error] || data.error || 'Verification failed');
+        }
+        msg.style.color = 'var(--success)';
+        msg.textContent = 'Email verified! You can now log in.';
+        cta.classList.remove('hidden');
+        setTimeout(() => location.replace('/login.html'), 1500);
+      } catch (err) {
+        msg.style.color = 'var(--danger)';
+        msg.textContent = err.message;
+        cta.classList.remove('hidden');
+      }
+    })();
+  </script>
+</body>
+</html>

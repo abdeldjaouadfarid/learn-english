@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reset password</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <div id="app" class="narrow">
+    <h1>Reset password</h1>
+    <p class="lead">Choose a new password.</p>
+
+    <form id="resetForm" class="card">
+      <label>
+        New password (min 8 characters)
+        <input type="password" id="password" required minlength="8" autocomplete="new-password" />
+      </label>
+      <button type="submit" class="primary" id="submitBtn">Update password</button>
+      <p id="msg" class="status"></p>
+    </form>
+
+    <div class="alt-link"><a href="/login.html">Back to log in</a></div>
+  </div>
+
+  <script>
+    const token = new URLSearchParams(location.search).get('token');
+    if (!token) {
+      document.getElementById('msg').textContent = 'Missing token — open the link from your email.';
+      document.getElementById('submitBtn').disabled = true;
+    }
+
+    document.getElementById('resetForm').onsubmit = async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('submitBtn');
+      const msg = document.getElementById('msg');
+      btn.disabled = true; msg.textContent = '';
+      try {
+        const res = await fetch('/api/auth/reset-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token, password: document.getElementById('password').value }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          const map = {
+            invalid_or_expired_token: 'This link has expired or already been used. Request a new one.',
+            password_too_short: 'Password must be at least 8 characters.',
+          };
+          throw new Error(map[data.error] || data.error || 'Reset failed');
+        }
+        msg.style.color = 'var(--success)';
+        msg.textContent = 'Password updated. Redirecting to log in…';
+        setTimeout(() => location.replace('/login.html'), 1500);
+      } catch (err) {
+        msg.textContent = err.message;
+        btn.disabled = false;
+      }
+    };
+  </script>
+</body>
+</html>

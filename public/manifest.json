@@ -1,0 +1,50 @@
+{
+  "name": "English Level Test & IELTS Roadmap",
+  "short_name": "English Test",
+  "description": "AI-powered English placement test, personalized IELTS roadmap, and vocabulary trainer with Arabic translations.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f1419",
+  "theme_color": "#4f9eff",
+  "lang": "en",
+  "categories": ["education", "productivity"],
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Placement test",
+      "short_name": "Test",
+      "description": "Start a new placement test",
+      "url": "/",
+      "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+    },
+    {
+      "name": "Vocabulary check",
+      "short_name": "Vocab",
+      "description": "Check words you know",
+      "url": "/vocab.html",
+      "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+    },
+    {
+      "name": "Words to learn",
+      "short_name": "Words",
+      "description": "Review unknown words",
+      "url": "/unknown.html",
+      "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+    }
+  ]
+}

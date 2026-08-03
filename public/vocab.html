@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vocabulary Check</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body data-requires-auth="1">
+  <div id="app">
+    <header class="topbar">
+      <a href="/" class="brand">English Level Test</a>
+      <div id="userBadge" class="user-badge"></div>
+    </header>
+
+    <section id="intro" class="screen">
+      <h1>Vocabulary Check</h1>
+      <p class="lead">We'll show you 100 English words. Click every word you know. When you're done, AI evaluates your vocabulary.</p>
+
+      <div class="card stats-card">
+        <div class="stats-row">
+          <div><strong id="statTotal">—</strong><span>seen so far</span></div>
+          <div><strong id="statKnown">—</strong><span>known</span></div>
+          <div><strong id="statUnknown">—</strong><span>unknown</span></div>
+        </div>
+      </div>
+
+      <button id="loadBtn" class="primary">Load 100 new words</button>
+      <p id="loadStatus" class="status"></p>
+
+      <div class="alt-link">
+        <a href="/unknown.html">Review words you don't know →</a>
+      </div>
+      <div class="alt-link" style="margin-top:8px;">
+        <a href="/">← Back to placement test</a>
+      </div>
+    </section>
+
+    <section id="words" class="screen hidden">
+      <div class="vocab-header">
+        <div class="vocab-counter">
+          <strong id="knownCount">0</strong> / <span id="totalCount">0</span> selected as known
+        </div>
+        <div class="vocab-actions">
+          <button id="selectAllBtn">All known</button>
+          <button id="clearBtn">Clear</button>
+        </div>
+      </div>
+
+      <div id="wordGrid" class="word-grid"></div>
+
+      <div class="test-nav">
+        <button id="cancelBtn">Cancel</button>
+        <button id="submitBtn" class="primary">Submit & evaluate</button>
+      </div>
+    </section>
+
+    <section id="results" class="screen hidden">
+      <h1>Vocabulary Evaluation</h1>
+
+      <div class="result-grid">
+        <div class="stat">
+          <div class="stat-label">Estimated CEFR</div>
+          <div class="stat-value" id="cefrLevel">—</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Vocab size (approx)</div>
+          <div class="stat-value" id="vocabSize">—</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Summary</h3>
+        <p id="summary"></p>
+      </div>
+
+      <div class="card">
+        <h3>Known by level</h3>
+        <div id="byLevel"></div>
+      </div>
+
+      <div class="card">
+        <h3>Strengths</h3>
+        <ul id="strengths"></ul>
+      </div>
+
+      <div class="card">
+        <h3>Weaknesses</h3>
+        <ul id="weaknesses"></ul>
+      </div>
+
+      <div class="card">
+        <h3>Next steps</h3>
+        <ul id="nextSteps"></ul>
+      </div>
+
+      <button id="againBtn" class="primary">Do another batch</button>
+      <a href="/" class="alt-link" style="display:inline-block;margin-left:12px;">Back to placement test</a>
+    </section>
+
+    <div id="loading" class="loading hidden">
+      <div class="spinner"></div>
+      <p id="loadingText">Loading…</p>
+    </div>
+  </div>
+
+  <script src="/auth-client.js"></script>
+  <script>Auth.ensureSession();</script>
+  <script src="/vocab.js"></script>
+</body>
+</html>

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Log in</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body data-public-only="1">
+  <div id="app" class="narrow">
+    <h1>Log in</h1>
+    <p class="lead">Welcome back.</p>
+
+    <form id="loginForm" class="card">
+      <label>
+        Email
+        <input type="email" id="email" required autocomplete="email" />
+      </label>
+      <label>
+        Password
+        <input type="password" id="password" required autocomplete="current-password" minlength="8" />
+      </label>
+      <button type="submit" class="primary" id="submitBtn">Log in</button>
+      <p id="msg" class="status"></p>
+      <p id="resendWrap" class="status hidden" style="color: var(--muted);">
+        Email not verified. <button id="resendBtn" type="button" class="link-btn">Resend verification link</button>
+      </p>
+    </form>
+
+    <div class="alt-link"><a href="/forgot.html">Forgot password?</a></div>
+    <div class="alt-link">No account? <a href="/signup.html">Sign up</a></div>
+  </div>
+
+  <script src="/auth-client.js"></script>
+  <script>
+    Auth.redirectIfAuthed();
+
+    const msg = document.getElementById('msg');
+    const resendWrap = document.getElementById('resendWrap');
+
+    document.getElementById('loginForm').onsubmit = async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = true; msg.textContent = ''; resendWrap.classList.add('hidden');
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: document.getElementById('email').value,
+            password: document.getElementById('password').value,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          if (data.error === 'email_not_verified') {
+            msg.textContent = 'Please verify your email first.';
+            resendWrap.classList.remove('hidden');
+          } else if (data.error === 'account_locked') {
+            msg.textContent = data.message || 'Too many failed attempts. Try again later.';
+          } else if (data.error === 'too_many_requests') {
+            const mins = data.retry_after ? Math.ceil(data.retry_after / 60) : 'a few';
+            msg.textContent = `Too many requests. Try again in ${mins} minute(s).`;
+          } else if (data.error === 'invalid_credentials') {
+            msg.textContent = data.attempts_left != null && data.attempts_left <= 2
+              ? `Wrong email or password. ${data.attempts_left} attempt(s) left before lockout.`
+              : 'Wrong email or password.';
+          } else {
+            msg.textContent = 'Error: ' + (data.error || res.status);
+          }
+          btn.disabled = false;
+          return;
+        }
+        Auth.setSession(data.token, data.user);
+        window.location.replace('/');
+      } catch (err) {
+        msg.textContent = 'Error: ' + err.message;
+        btn.disabled = false;
+      }
+    };
+
+    document.getElementById('resendBtn').onclick = async () => {
+      const email = document.getElementById('email').value;
+      if (!email) { msg.textContent = 'Enter your email first.'; return; }
+      try {
+        const res = await fetch('/api/auth/resend-verification', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          msg.textContent = data.error === 'too_many_requests'
+            ? 'Too many resends. Try later.'
+            : 'Error: ' + data.error;
+          return;
+        }
+        msg.style.color = 'var(--success)';
+        msg.textContent = 'Verification link sent — check your inbox.';
+      } catch (err) {
+        msg.textContent = 'Error: ' + err.message;
+      }
+    };
+  </script>
+</body>
+</html>

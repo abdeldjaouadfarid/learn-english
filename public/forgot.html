@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Forgot password</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body data-public-only="1">
+  <div id="app" class="narrow">
+    <h1>Forgot password</h1>
+    <p class="lead">Enter your email. If we find an account, we'll send a reset link.</p>
+
+    <form id="forgotForm" class="card">
+      <label>
+        Email
+        <input type="email" id="email" required autocomplete="email" />
+      </label>
+      <button type="submit" class="primary" id="submitBtn">Send reset link</button>
+      <p id="msg" class="status"></p>
+    </form>
+
+    <div class="alt-link"><a href="/login.html">← Back to log in</a></div>
+  </div>
+
+  <script src="/auth-client.js"></script>
+  <script>
+    Auth.redirectIfAuthed();
+
+    document.getElementById('forgotForm').onsubmit = async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('submitBtn');
+      const msg = document.getElementById('msg');
+      btn.disabled = true; msg.textContent = '';
+      try {
+        const res = await fetch('/api/auth/forgot-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: document.getElementById('email').value }),
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.error || 'Request failed');
+        }
+        msg.style.color = 'var(--success)';
+        msg.textContent = 'If that email exists, a reset link is on its way. Check your inbox.';
+      } catch (err) {
+        msg.textContent = err.message;
+        btn.disabled = false;
+      }
+    };
+  </script>
+</body>
+</html>

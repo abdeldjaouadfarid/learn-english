@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Words to Learn</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body data-requires-auth="1">
+  <div id="app">
+    <header class="topbar no-print">
+      <a href="/" class="brand">English Level Test</a>
+      <div id="userBadge" class="user-badge"></div>
+    </header>
+
+    <div class="no-print">
+      <h1>Words to Learn</h1>
+      <p class="lead">Words you marked as unknown. Sorted by importance (for IELTS) and frequency (most common English first).</p>
+
+      <div class="card toolbar">
+        <div class="toolbar-group">
+          <label style="margin:0;">
+            Level
+            <select id="filterLevel">
+              <option value="">All</option>
+              <option>A1</option><option>A2</option><option>B1</option>
+              <option>B2</option><option>C1</option><option>C2</option>
+            </select>
+          </label>
+          <label style="margin:0;">
+            Sort by
+            <select id="sortBy">
+              <option value="importance">Importance</option>
+              <option value="frequency">Frequency (most common first)</option>
+              <option value="level">Level</option>
+              <option value="alpha">A → Z</option>
+            </select>
+          </label>
+        </div>
+        <div class="toolbar-group">
+          <button id="reenrichBtn">Fetch translations</button>
+          <button id="pdfBtn" class="primary">Download PDF</button>
+        </div>
+      </div>
+
+      <p id="statusLine" class="status" style="color:var(--muted);"></p>
+    </div>
+
+    <div class="print-header hidden">
+      <h1>Words to Learn — Study Sheet</h1>
+      <p id="printMeta"></p>
+    </div>
+
+    <div class="table-wrap">
+      <table id="wordTable">
+        <thead>
+          <tr>
+            <th style="width:32px;">#</th>
+            <th>Word</th>
+            <th class="col-arabic">Arabic</th>
+            <th class="col-example">Example</th>
+            <th class="col-pos">POS</th>
+            <th class="col-level">Level</th>
+            <th class="col-freq">Freq.</th>
+            <th class="col-imp">Imp.</th>
+            <th class="col-action no-print"></th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+      <p id="emptyMsg" class="hint hidden">No unknown words saved yet. <a href="/vocab.html">Take a vocabulary check</a> first.</p>
+    </div>
+
+    <div class="no-print alt-link">
+      <a href="/vocab.html">← Back to vocabulary check</a>
+    </div>
+
+    <div id="loading" class="loading hidden">
+      <div class="spinner"></div>
+      <p id="loadingText">Loading…</p>
+    </div>
+  </div>
+
+  <script src="/auth-client.js"></script>
+  <script>Auth.ensureSession();</script>
+  <script src="/unknown.js"></script>
+</body>
+</html>

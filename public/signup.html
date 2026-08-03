@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign up</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body data-public-only="1">
+  <div id="app" class="narrow">
+    <div id="formView">
+      <h1>Sign up</h1>
+      <p class="lead">Create an account to save your progress.</p>
+
+      <form id="signupForm" class="card">
+        <label>
+          Email
+          <input type="email" id="email" required autocomplete="email" />
+        </label>
+        <label>
+          Password (min 8 characters)
+          <input type="password" id="password" required minlength="8" autocomplete="new-password" />
+        </label>
+        <button type="submit" class="primary" id="submitBtn">Create account</button>
+        <p id="msg" class="status"></p>
+      </form>
+
+      <div class="alt-link">Already have an account? <a href="/login.html">Log in</a></div>
+    </div>
+
+    <div id="sentView" class="hidden">
+      <h1>Check your inbox</h1>
+      <div class="card">
+        <p>We sent a verification link to <strong id="sentEmail"></strong>.</p>
+        <p class="hint" style="text-align:left;">The link expires in 24 hours. Click it, then come back and log in.</p>
+        <p class="hint" style="text-align:left;">Didn't get it? Check spam, or <button id="resendBtn" class="link-btn">resend the link</button>.</p>
+        <p id="resendMsg" class="status"></p>
+      </div>
+      <div class="alt-link"><a href="/login.html">Go to log in →</a></div>
+    </div>
+  </div>
+
+  <script src="/auth-client.js"></script>
+  <script>
+    Auth.redirectIfAuthed();
+
+    let signedUpEmail = null;
+
+    document.getElementById('signupForm').onsubmit = async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('submitBtn');
+      const msg = document.getElementById('msg');
+      btn.disabled = true; msg.textContent = '';
+      try {
+        const email = document.getElementById('email').value;
+        const res = await fetch('/api/auth/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password: document.getElementById('password').value }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          const map = {
+            email_taken: 'That email is already registered.',
+            invalid_email: 'Please enter a valid email.',
+            password_too_short: 'Password must be at least 8 characters.',
+            too_many_requests: 'Too many signup attempts. Try again in an hour.',
+          };
+          throw new Error(map[data.error] || data.error || 'Signup failed');
+        }
+        signedUpEmail = email;
+        document.getElementById('sentEmail').textContent = email;
+        document.getElementById('formView').classList.add('hidden');
+        document.getElementById('sentView').classList.remove('hidden');
+      } catch (err) {
+        msg.textContent = err.message;
+        btn.disabled = false;
+      }
+    };
+
+    document.getElementById('resendBtn').onclick = async () => {
+      const resendMsg = document.getElementById('resendMsg');
+      resendMsg.textContent = '';
+      try {
+        const res = await fetch('/api/auth/resend-verification', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: signedUpEmail }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          const map = { too_many_requests: `Too many resends. Try again in ${data.retry_after ? Math.ceil(data.retry_after / 60) + ' min' : 'a bit'}.` };
+          throw new Error(map[data.error] || data.error || 'Failed');
+        }
+        resendMsg.style.color = 'var(--success)';
+        resendMsg.textContent = 'Sent — check your inbox again.';
+      } catch (err) {
+        resendMsg.textContent = err.message;
+      }
+    };
+  </script>
+</body>
+</html>
