@@ -124,11 +124,12 @@ router.post('/test', requireAuth, async (req, res) => {
   }
 });
 
-// External-cron endpoint. Protected by NOTIFY_TICK_SECRET — set the header
-// X-Tick-Secret to trigger. Also runs automatically via server-side interval.
-router.post('/tick', async (req, res) => {
+// External-cron endpoint. Protected by NOTIFY_TICK_SECRET.
+// Accepts either header X-Tick-Secret (POST) or ?secret=... in query (GET or POST).
+// Also runs automatically via the internal setInterval when the server is awake.
+async function handleTick(req, res) {
   const secret = process.env.NOTIFY_TICK_SECRET;
-  const provided = req.headers['x-tick-secret'];
+  const provided = req.headers['x-tick-secret'] || req.query.secret;
   if (!secret) return res.status(503).json({ error: 'tick_secret_not_configured' });
   if (provided !== secret) return res.status(401).json({ error: 'bad_secret' });
 
@@ -139,6 +140,8 @@ router.post('/tick', async (req, res) => {
     console.error('tick error:', err);
     res.status(500).json({ error: err.message });
   }
-});
+}
+router.post('/tick', handleTick);
+router.get('/tick', handleTick);
 
 export default router;
