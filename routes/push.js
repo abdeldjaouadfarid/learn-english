@@ -49,6 +49,52 @@ router.get('/status', requireAuth, async (req, res) => {
   res.json({ subscribed: rows.length > 0, count: rows.length, endpoints: rows.map(r => r.endpoint) });
 });
 
+// Diagnose why (or whether) notifications should be firing for the caller.
+router.get('/diagnose', requireAuth, async (req, res) => {
+  try {
+    const { rows: subs } = await query(
+      'SELECT id, endpoint, created_at, last_sent_at, last_word_id FROM push_subscriptions WHERE user_id = $1',
+      [req.user.id]
+    );
+    const { rows: wordsRow } = await query(
+      `SELECT
+         COUNT(*) FILTER (WHERE status='unknown')                                         AS total_unknown,
+         COUNT(*) FILTER (WHERE status='unknown' AND arabic IS NOT NULL)                  AS ready_to_send,
+         COUNT(*) FILTER (WHERE status='unknown' AND arabic IS NULL)                      AS pending_enrichment
+       FROM vocab_words WHERE user_id = $1`,
+      [req.user.id]
+    );
+    res.json({
+      push_configured_on_server: pushConfigured(),
+      internal_interval_min: Number(process.env.NOTIFY_INTERVAL_MIN) || 30,
+      external_cron_secret_set: !!process.env.NOTIFY_TICK_SECRET,
+      subscriptions: subs.map(s => ({
+        created_at: s.created_at,
+        last_sent_at: s.last_sent_at,
+        endpoint_prefix: s.endpoint.slice(0, 60) + '…',
+      })),
+      words: {
+        total_unknown: Number(wordsRow[0].total_unknown),
+        ready_to_send: Number(wordsRow[0].ready_to_send),
+        pending_enrichment: Number(wordsRow[0].pending_enrichment),
+      },
+      notes: [
+        subs.length === 0
+          ? 'No push subscription — go to the dashboard and tap "Enable notifications".'
+          : 'Subscribed on this account.',
+        Number(wordsRow[0].ready_to_send) === 0
+          ? 'No unknown words with an Arabic translation — the tick will skip you. Fetch translations on /unknown.html.'
+          : 'You have words the tick can send.',
+        process.env.NOTIFY_TICK_SECRET
+          ? 'External cron can hit POST /api/push/tick with header X-Tick-Secret to survive Render Free spin-down.'
+          : 'Set NOTIFY_TICK_SECRET in env and configure an external cron if the server sleeps.',
+      ],
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Sends the caller a push right now — handy for testing after enabling.
 router.post('/test', requireAuth, async (req, res) => {
   try {
